@@ -6,8 +6,8 @@ from werkzeug import secure_filename
 
 from handler import *
 
-UPLOAD_FOLDER = 'images'
-ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
+UPLOAD_FOLDER = 'images/'
+ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif','JPG'])
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -17,6 +17,7 @@ def allowed_file(filename):
            filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
 @app.route('/check_img', methods=['POST'])
+#curl -F "file=@test.jpg; filename=test.jpg" http://127.0.0.1:5000/check_img
 def check_img():
     if request.method == 'POST':
         file = request.files['file']        
@@ -25,23 +26,70 @@ def check_img():
             #todo update filename            
             img_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(img_path)
-            
             #todo check for tampering
             data = get_info_from_QRcode(img_path)
             if not data:
                 return 'QRcode Invalid!'
-            #todo check sequence information
             username = data['username']
+            ticks = data['ticks']
+            '''
+            ticks_now = time.time()
+            if ticks_now - ticks > 2*QRcode_interval:
+                return 'QRcode timeout'
+            '''
             result = user_authentication_by_image(username,img_path)
             if result:
                 #authentication success
-                return 'ok'
+                return 'auth ok'
             else:
                 #username does not exist or fingerprint does not match
-                return 'not ok'            
+                return 'auth not ok'            
         else:
             return 'upload file is not image'
 
+@app.route('/upload_fingerprint', methods=['POST'])
+#curl -F "photos=@MIX2_WEN_BLANK_HIGH_1.JPG; filename=MIX2_WEN_BLANK_HIGH_1.JPG" -F "photos=@MIX2_WEN_BLANK_HIGH_2.JPG; filename=MIX2_WEN_BLANK_HIGH_2.JPG" http://127.0.0.1:5000/upload_fingerprint
+def upload_fingerprint():
+    if request.method == 'POST':
+        #todo get username
+        username = 'test'
+        files = request.files.getlist('photos')
+        img_path_list = []
+        for file in files:
+            filename = file.filename
+            if file and allowed_file(file.filename):
+                img_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                file.save(img_path)
 
+                img_path_list += [img_path]
+        #todo check if images is invalid
+        fingerprint = get_fingerprint_from_img_list(img_path_list)
+        if not save_fingerprint_into_db(fingerprint,username):
+            return 'username does not exist'
+        return 'ok'
+            
+            
+@app.route('/reg', methods=['POST'])
+#curl http://127.0.0.1:5000/reg -X post -d "username=test&password=123456"
+def reg():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        if add_new_user(username,password):
+            return 'reg ok'
+        else:
+            return 'username exists'
+      
+@app.route('/check_pwd', methods=['POST'])
+#curl http://127.0.0.1:5000/check_pwd -X post -d "username=test&password=123456"
+def check_pwd():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        if user_authentication_by_password(username,password):
+            return 'password correct'
+        else:
+            return 'password incorrect'
+            
 if __name__ == '__main__':
     app.run(debug=True)

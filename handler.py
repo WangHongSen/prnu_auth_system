@@ -5,16 +5,32 @@ import json
 import numpy as np
 import prnu
 import pickle
-from sqlhandler import *
-from pyzbar.pyzbar import decode
+
+from QRcodeDecoder import decoder
+from glob import glob
+from sqlHandler import *
+
 from PIL import Image
 
 pix_size = 512
+QRcode_dir = 'QRcode/'
+QRcode_interval = 300
 
+def get_latest_QRcode(username):
 
+    QRcode_list = sorted(glob(QRcode_dir+'*_%s.png'%username))
+    if not QRcode_list:
+        #no QRcode in dir
+        return None,None
+    latest_QRcode_path = QRcode_list[-1]
+    latest_QRcode_name = latest_QRcode_path.split('/')[-1]
+    latest_QRcode_ticks = latest_QRcode_name.split('_')[0]
+    
+    return latest_QRcode_path,latest_QRcode_ticks
+    
 def get_info_from_QRcode(QRcode_path):
-    #https://github.com/NaturalHistoryMuseum/pyzbar
-    encode_data = str(decode(Image.open(QRcode_path))[0][0], encoding = "utf8")
+    #https://github.com/LeonhardFeiner/EasyQrCodeScanner
+    encode_data = decoder(QRcode_path)
     data = get_decode_data(encode_data)
     if data:     
         data = json.loads(data)        
@@ -24,6 +40,12 @@ def get_info_from_QRcode(QRcode_path):
 
 def get_QRcode(username):
     ticks = time.time()
+    
+    latest_QRcode_path,latest_QRcode_ticks = get_latest_QRcode(username)
+    if latest_QRcode_path:
+        if float(latest_QRcode_ticks) - ticks < QRcode_interval:
+            return latest_QRcode_path
+
     username = username
     data = '{"username":"%s","ticks":"%s"}'%(username,ticks)
     
@@ -31,14 +53,14 @@ def get_QRcode(username):
     save_encode_data_into_db(encode_data,data)
     
     #https://github.com/lincolnloop/python-qrcode
-    img = qrcode.make(encode_data)
-    img_dir = 'QRcode/'
+    QRcode = qrcode.make(encode_data)
+    
     #can't save as *.jpg
-    img_name = '%s_%s.png'%(ticks,username)
-    img_path = img_dir + img_name
-    img.save(img_path)
+    QRcode_name = '%s_%s.png'%(ticks,username)
+    QRcode_path = QRcode_dir + QRcode_name
+    QRcode.save(QRcode_path)
 
-    return img_path
+    return QRcode_path
 
 def get_fingerprint_from_img_list(img_path_list):
     
@@ -99,7 +121,7 @@ def user_authentication_by_image(username,image_path):
         return None
         
     PCE = get_PCE_from_single_img(fingerprint,image_path)
-    
+    print(PCE)
     if PCE > PCEthreshold:
         return True
     else:
@@ -121,7 +143,6 @@ def test():
     print(user_authentication_by_image('test',img_path))
     print(user_authentication_by_password('test','123456'))
     
-if __name__ == "__main__":    
-    #print(add_new_user('test','123456'))
-    test()
+if __name__ == "__main__":   
+    #test()
     pass
