@@ -3,7 +3,8 @@ import numpy
 import os
 import sys
 from reedsolo import ReedSolomonError
-
+from PIL import Image
+from pyzbar.pyzbar import decode
 from .qr_detector import extract_matrix, QrDetectorError
 from .qr_decoder import extract_bit_array, extract_string, error_correction, \
     get_version_size, get_format_info_data, QrDecoderError
@@ -11,6 +12,8 @@ from .qr_decoder import extract_bit_array, extract_string, error_correction, \
 def decoder(img_path):
 
     image = cv2.imread(img_path,-1)
+    if type(image[0][0]).__name__ == 'uint8':
+        return str(decode(Image.open(img_path))[0][0], encoding='utf-8')
     image = cv2.blur(image,(5,5))    #进行滤波去掉噪声
     if image is False:
         print('could not open picture')
@@ -26,8 +29,8 @@ def decoder(img_path):
             string = extract_string(bit_array, version) 
         except QrDetectorError as e:
             print('Error while detecting occurred: {}'.format(e), file = sys.stderr)
-            for image, name in e.image_list:
-                cv2.imshow(name, image)
+            #for image, name in e.image_list:
+                #cv2.imshow(name, image)
         except ReedSolomonError as e:
             print('Error while applying error correction occurred: {}'.format(e), file = sys.stderr)
         except QrDecoderError as e:

@@ -1,6 +1,6 @@
 import qrcode
 import time
-import hashlib
+
 import json
 import numpy as np
 import prnu
@@ -12,7 +12,7 @@ from sqlHandler import *
 
 from PIL import Image
 
-pix_size = 512
+pix_size = 2048
 QRcode_dir = 'QRcode/'
 QRcode_interval = 300
 
@@ -39,17 +39,20 @@ def get_info_from_QRcode(QRcode_path):
         return None
 
 def get_QRcode(username):
-    ticks = time.time()
     
+    if not get_password_by_username(username):
+        #username does not exist
+        return None
+    ticks = time.time()
     latest_QRcode_path,latest_QRcode_ticks = get_latest_QRcode(username)
     if latest_QRcode_path:
-        if float(latest_QRcode_ticks) - ticks < QRcode_interval:
+        if ticks - float(latest_QRcode_ticks) < QRcode_interval:
             return latest_QRcode_path
-
+    
     username = username
     data = '{"username":"%s","ticks":"%s"}'%(username,ticks)
     
-    encode_data = encrypt_data(data)
+    encode_data = hashlib.md5(data.encode("utf8")).hexdigest()
     save_encode_data_into_db(encode_data,data)
     
     #https://github.com/lincolnloop/python-qrcode
@@ -87,24 +90,17 @@ def get_PCE_from_single_img(fingerprint,img_path):
     detected_fingerprint = prnu.extract_single(img)
     cc2d = prnu.crosscorr_2d(fingerprint, detected_fingerprint)
     PCE = prnu.pce(cc2d)['pce']
-
+    print(PCE)
     return PCE 
-
-def encrypt_data(data):
-
-    md5 = hashlib.md5()
-    md5.update(data.encode("utf8"))
-    encrypted_data = md5.hexdigest()
     
-    return encrypted_data
-
 def user_authentication_by_password(username,password):
     
     encode_password_in_database = get_password_by_username(username)
     if not encode_password_in_database:
         #Username does not exist!
         return None
-    encode_password = encrypt_data(password)
+
+    encode_password = hashlib.md5(password.encode("utf8")).hexdigest()
     if encode_password == encode_password_in_database:
         return True
     else:
@@ -121,7 +117,7 @@ def user_authentication_by_image(username,image_path):
         return None
         
     PCE = get_PCE_from_single_img(fingerprint,image_path)
-    print(PCE)
+
     if PCE > PCEthreshold:
         return True
     else:
@@ -129,20 +125,21 @@ def user_authentication_by_image(username,image_path):
 
 def test():
 
-    init_db()
+    #init_db()
     
+    add_new_user('test','123456')
     path = get_QRcode('test')
     data = get_info_from_QRcode(path)
     print(data['username'])
     
-    add_new_user('test','123456')
-    img_path_list = ['test/data/myff-jpg/MIX2_WEN_BLANK_HIGH_1.JPG','test/data/myff-jpg/MIX2_WEN_BLANK_HIGH_2.JPG']
+    
+    img_path_list = ['testdata/MIX2_WEN_BLANK_HIGH_1.JPG','testdata/MIX2_WEN_BLANK_HIGH_2.JPG']
     fingerprint = get_fingerprint_from_img_list(img_path_list)
     save_fingerprint_into_db(fingerprint,'test')
-    img_path = 'test/data/mynat-jpg/MIX2_WEN_DARK_HIGH_41.JPG'  
+    img_path = 'testdata/test.jpg'  
     print(user_authentication_by_image('test',img_path))
     print(user_authentication_by_password('test','123456'))
     
-if __name__ == "__main__":   
+if __name__ == "__main__":  
     #test()
     pass

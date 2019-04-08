@@ -1,5 +1,5 @@
 import pickle
-
+import hashlib
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
@@ -21,8 +21,8 @@ class QRcode(Base):
     data = Column(String(500),nullable=False)   
 
 def add_new_user(username,password):        
-    from handler import encrypt_data
-    encode_password = encrypt_data(password)
+
+    encode_password = hashlib.md5(password.encode("utf8")).hexdigest()
 
     session = Session()
     new_user = User(username=username,password=encode_password,fingerprint=None)

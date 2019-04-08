@@ -73,11 +73,12 @@ def extract_matrix(image, debug=False):
 
     image_resized = cv2.resize(image, (600, 600))
     #image_resized = image;
+
     image_gray = cv2.cvtColor(image_resized, cv2.COLOR_RGB2GRAY)
     image_edges = cv2.Canny(image_gray, 100, 200)
 
     _, contours, [hierarchy] = cv2.findContours(image_edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-
+    
     def get_dept(index):
         '''
         Looks for the amount of children in hierarchy for a certain index
@@ -92,7 +93,6 @@ def extract_matrix(image, debug=False):
 
     # finding finder pattern which is a 5 times nested contour
     marks = [i for i in range(len(hierarchy)) if get_dept(i) == 5]
-
     if len(marks) != 3: # check if 3 and only 3 finder pattern have been found
         raise QrDetectorError(
             'Detected {} Finder Pattern. Exact 3 are required!'.format(len(marks)), debug_collect_images())
