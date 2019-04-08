@@ -1,0 +1,11 @@
+<html>
+    <head>
+        <title>uploadFingerprint page</title>
+    </head>
+        <!-- don't miss "enctype='multipart/form-data'" -->
+        <form action="/uploadFingerprint" enctype='multipart/form-data' method="POST">
+            <input type="file" name="photos" multiple>
+            <input type="submit" value="upload" />{{error_code}}
+		</form>
+    </body>
+</html>

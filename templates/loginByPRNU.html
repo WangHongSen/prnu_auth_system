@@ -1,0 +1,19 @@
+<html>
+    <head>
+        <title>loginByPRNU page</title>
+    </head>
+        <!-- don't miss "enctype='multipart/form-data'" -->
+        <form action="/loginByPRNU" method="POST">
+            <p>Username: <input type="text" name="username" /></p>
+			<input type="submit" value="getQRcode" />{{error_code}}
+		</form>
+		{% if img_path %}
+		    <img src='{{img_path}}'>
+		    <form action="/checkImg" enctype='multipart/form-data' method="POST">
+            <input type="file" name="file">
+            <input type="submit" value="upload" />
+		</form>
+		{% endif %}
+		
+    </body>
+</html>

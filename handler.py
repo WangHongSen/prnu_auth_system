@@ -13,7 +13,7 @@ from sqlHandler import *
 from PIL import Image
 
 pix_size = 2048
-QRcode_dir = 'QRcode/'
+QRcode_dir = 'static/img/QRcode/'
 QRcode_interval = 300
 
 def get_latest_QRcode(username):

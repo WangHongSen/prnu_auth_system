@@ -1,0 +1,14 @@
+<html>
+    <head>
+        <title>login page</title>
+    </head>
+    <body>
+        <form action="/login" method="post">
+			<p>Username: <input type="text" name="username" /></p>
+			<p>Password: <input type="Password" name="password" />{{error_code}}</p>
+			<input type="submit" value="login" />
+		</form>
+		<a href="/reg">reg</a>
+		<a href="/loginByPRNU">loginByPRNU</a>
+    </body>
+</html>
