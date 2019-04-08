@@ -1,20 +1,20 @@
 # prnu_auth_system
 
 ## 使用方法
-克隆项目
-`git clone https://github.com/imbawenzi/prnu_auth_system.git`
-进入项目目录
-`cd prnu_auth_system`
-安装依赖
-`pip install -r requirements.txt`
-运行app.py
-`python app.py`
+克隆项目  
+`git clone https://github.com/imbawenzi/prnu_auth_system.git`  
+进入项目目录  
+`cd prnu_auth_system`  
+安装依赖  
+`pip install -r requirements.txt`  
+运行app.py  
+`python app.py`  
 
-`127.0.0.1:5000/reg`				注册
-`127.0.0.1:5000/login`				使用密码登陆
-`127.0.0.1:5000/logout`				登出
-`127.0.0.1:5000/loginByPRNU`		使用照片登陆
-`127.0.0.1:5000/uploadFingerprint`	上传照片
+`127.0.0.1:5000/reg`				注册  
+`127.0.0.1:5000/login`				使用密码登陆  
+`127.0.0.1:5000/logout`				登出  
+`127.0.0.1:5000/loginByPRNU`		使用照片登陆  
+`127.0.0.1:5000/uploadFingerprint`	上传照片  
 
 ## 文件目录
 
